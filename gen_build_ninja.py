@@ -135,7 +135,9 @@ bindir   = "./bin/"
 
 sourcedir = "."
 
-devkitdir = "/home/wictory/bin/devkitARM/bin/"
+#devkitdir = "/home/wictory/bin/devkitARM/bin/"
+devkitdir = "/opt/devkitpro/devkitARM/bin/"
+#devkitdir = "/tools/Xilinx/Vitis/2019.2/gnu/aarch32/lin/gcc-arm-none-eabi/bin/"
 
 #n = ninja_syntax.Writer(sys.stdout)
 fout = open("build.ninja", "w")
@@ -148,9 +150,9 @@ common_includedirs = [
     sourcedir + "/Source/include",
     ]
 
-n.variable(key="cc", value=devkitdir + "arm-eabi-gcc")
-n.variable(key="ld", value=devkitdir + "arm-eabi-ld")
-n.variable(key="objcopy", value=devkitdir + "arm-eabi-objcopy")
+n.variable(key="cc", value=devkitdir + "arm-none-eabi-gcc")
+n.variable(key="ld", value=devkitdir + "arm-none-eabi-ld")
+n.variable(key="objcopy", value=devkitdir + "arm-none-eabi-objcopy")
 n.variable(key="mkimage", value="mkimage")
 n.variable(key="cloc", value="cloc")
 n.variable(key="cscope", value="cscope")
