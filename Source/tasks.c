@@ -386,8 +386,39 @@ static tskTCB *prvAllocateTCBAndStack( unsigned short usStackDepth, portSTACK_TY
 
 
 /*lint +e956 */
+/* UART */
+//#define QEMU_VIRT_UART_BASE			(0x09000000)
+//#define QEMU_VIRT_UART_BASE			(0xe0000000)
+ 
+#define QEMU_VIRT_UART_BASE			(0x09001000)
+#define UARTDR			(QEMU_VIRT_UART_BASE)
+#define UARTFR			(QEMU_VIRT_UART_BASE + 0x018)
+static volatile unsigned int * const UART0DR = (unsigned int *) UARTDR;
+static volatile unsigned int * const UART0FR = (unsigned int *) UARTFR;
+static void uart_putc(const char c)
+{
+	// Wait for UART to become ready to transmit.
+	while ((*UART0FR) & (1 << 5)) { }
+	*UART0DR = c; 
+}
+/*
+static void uart_puthex(uint64_t n)
+{
+	const char *hexdigits = "0123456789ABCDEF";
 
-
+	uart_putc('0');
+	uart_putc('x');
+	for (int i = 60; i >= 0; i -= 4){
+		uart_putc(hexdigits[(n >> i) & 0xf]);
+		if (i == 32)
+			uart_putc(' ');
+	}
+}
+*/
+static void uart_puts(const char *s) {
+	for (int i = 0; s[i] != '\0'; i ++)
+		uart_putc((unsigned char)s[i]);
+}
 
 /*-----------------------------------------------------------
  * TASK CREATION API documented in task.h
@@ -1037,6 +1068,7 @@ tskTCB * pxNewTCB;
 	{
 	portBASE_TYPE xReturn = pdFALSE;
 	const tskTCB * const pxTCB = ( tskTCB * ) xTask;
+        uart_puts ("task suspend \n");
 
 		/* It does not make sense to check if the calling task is suspended. */
 		configASSERT( xTask );
@@ -1161,6 +1193,7 @@ tskTCB * pxNewTCB;
 void vTaskStartScheduler( void )
 {
 portBASE_TYPE xReturn;
+        uart_puts("start scheduler \n");
 
 	/* Add the idle task at the lowest priority. */
 	#if ( INCLUDE_xTaskGetIdleTaskHandle == 1 )
@@ -1228,6 +1261,7 @@ void vTaskEndScheduler( void )
 	/* Stop the scheduler interrupts and call the portable scheduler end
 	routine so the original ISRs can be restored if necessary.  The port
 	layer must ensure interrupts enable	bit is left in the correct state. */
+        uart_puts("endscheduler \n");
 	portDISABLE_INTERRUPTS();
 	xSchedulerRunning = pdFALSE;
 	vPortEndScheduler();
@@ -2209,7 +2243,7 @@ static void prvAddCurrentTaskToDelayedList( portTickType xTimeToWake )
 {
 	/* The list item will be inserted in wake time order. */
 	listSET_LIST_ITEM_VALUE( &( pxCurrentTCB->xGenericListItem ), xTimeToWake );
-
+        uart_puts("prvAddCurrentTaskToDelayedList \n");
 	if( xTimeToWake < xTickCount )
 	{
 		/* Wake time has overflowed.  Place this item in the overflow list. */

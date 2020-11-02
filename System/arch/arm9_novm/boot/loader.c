@@ -88,7 +88,7 @@ static int check_elf_magic(Elf32_Ehdr *hdr)
 			continue;
 
 		void *section_addr = (void *)((npi_t)start_address + (npi_t)s[i].sh_addr);
-		DEBUG_MSG("Copying section #%i to 0x%x\n", i, (npi_t)section_addr);
+		DEBUG_MSG("Copying section #%i to 0x%lx\n", i, (npi_t)section_addr);
 		
 		if (s[i].sh_type != SHT_NOBITS) {
 			/*

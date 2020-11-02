@@ -102,11 +102,6 @@ static portSTACK_TYPE *puxIRQStackPointer = &(puxIRQStack[ portIRQ_STACK_SIZE - 
 static portSTACK_TYPE *puxAbortStackPointer = &(puxAbortStack[ portABORT_STACK_SIZE - 1 ] );
 static portSTACK_TYPE *puxSVCStackPointer = &(puxSVCStack[ portSVC_STACK_SIZE - 1 ] );
 
-#if ( configVM_PRE_SETUP == 0)
-/* Page table */
-static unsigned long PageTable[4096] __attribute__((aligned (16384)));
-#endif
-
 /*
  * Setup the timer to generate the tick interrupts.
  */
@@ -159,10 +154,9 @@ int iResult = 0;
 portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE pxCode, void *pvParameters )
 {
 portSTACK_TYPE *pxOriginalStack = pxTopOfStack;
-	/* Align top of stack */
-	pxTopOfStack = (portSTACK_TYPE *)((unsigned long)(pxTopOfStack)&~portBYTE_ALIGNMENT_MASK);
 	/* Simulate the stack frame as it would be created by a context switch
 	interrupt. */
+	pxTopOfStack--; /* Offset added to account for the way the MCU uses the stack on entry/exit of interrupts. */
 	*pxTopOfStack = portINITIAL_XPSR;	/* xPSR */
 	pxTopOfStack--;
 	*pxTopOfStack = ( portSTACK_TYPE ) pxCode;	/* PC */
@@ -519,204 +513,65 @@ void vPortUnknownInterruptHandler( void *pvParameter )
 }
 /*----------------------------------------------------------------------------*/
 
-#if ( configVM_PRE_SETUP == 0 )
-static unsigned long ReadSCTLR()
-{
-	unsigned long SCTLR;
-	__asm volatile("mrc p15, 0, %[sctlr], c1, c0, 0"
-	:[sctlr] "=r" (SCTLR)::);
-	return SCTLR;
-}
-
-static void WriteSCTLR(unsigned long SCTLR)
-{
-	__asm volatile("mcr p15, 0, %[sctlr], c1, c0, 0"
-	::[sctlr] "r" (SCTLR):);
-}
-
-static unsigned long ReadACTLR()
-{
-	unsigned long ACTLR;
-	__asm volatile("mrc p15, 0, %[actlr], c1, c0, 1"
-	:[actlr] "=r" (ACTLR)::);
-	return ACTLR;
-}
-
-static void WriteACTLR(unsigned long ACTLR)
-{
-	__asm volatile("mcr p15, 0, %[actlr], c1, c0, 0"
-	::[actlr] "r" (ACTLR):);
-}
-#endif
-
-void vPortInvalidateInstructionCache(void)
-{
-	__asm volatile ("mcr   p15, 0, %[zero], c7, c5, 0"::[zero] "r" (0):);
-}
-
-void vPortCleanDataCache(void)
-{
-
-/************************************************************************/
-/* Copied from linux arch/arm/mm/cache-v7.S,						    */
-/* this is the text from files header:								    */
-/* 																    */
-/* linux/arch/arm/mm/cache-v7.S									    */
-/* 																    */
-/* Copyright (C) 2001 Deep Blue Solutions Ltd.						    */
-/* Copyright (C) 2005 ARM Ltd.										    */
-/* 																    */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as   */
-/* published by the Free Software Foundation.						    */
-/* 																    */
-/* This is the "shell" of the ARMv7 processor support.				    */
-/************************************************************************/
-
-	__asm volatile("dmb\n\t" /* ensure ordering with previous memory accesses */
-				   "mrc	p15, 1, r0, c0, c0, 1\n\t" /* read clidr */
-				   "ands	r3, r0, #0x7000000\n\t" /* extract loc from clidr */
-				   "mov	r3, r3, lsr #23\n\t" /* left align loc bit field */
-				   "beq	finished\n\t" /* if loc is 0, then no need to clean */
-				   "mov	r10, #0\n\t" /* start clean at cache level 0 */
-				   "loop1:\n\t"
-				   "add	r2, r10, r10, lsr #1\n\t" /* work out 3x current cache level */
-				   "mov	r1, r0, lsr r2\n\t" /* extract cache type bits from clidr */
-				   "and	r1, r1, #7\n\t" /* mask of the bits for current cache only */
-				   "cmp	r1, #2\n\t" /* see what cache we have at this level */
-				   "blt	skip\n\t" /* skip if no cache, or just i-cache */
-				   /* Should be here: Disable interrupts ... */ /* make cssr&csidr read atomic */
-				   "mcr	p15, 2, r10, c0, c0, 0\n\t" /* select current cache level in cssr */
-				   "isb\n\t" /* isb to sych the new cssr&csidr */
-				   "mrc	p15, 1, r1, c0, c0, 0\n\t" /* read the new csidr */
-				   /* Should be here: Enable interrupts ... */
-				   "and	r2, r1, #7\n\t" /* extract the length of the cache lines */
-				   "add	r2, r2, #4\n\t" /* add 4 (line length offset) */
-				   "ldr	r4, =0x3ff\n\t"
-				   "ands	r4, r4, r1, lsr #3\n\t" /* find maximum number on the way size */
-				   "clz	r5, r4\n\t" /* find bit position of way size increment */
-				   "ldr	r7, =0x7fff\n\t"
-				   "ands	r7, r7, r1, lsr #13\n\t" /* extract max number of the index size */
-				   "loop2:\n\t"
-				   "mov	r9, r4\n\t" /* create working copy of max way size */
-				   "loop3:\n\t"
-				   "orr	r6, r10, r9, lsl r5\n\t" /* factor way and cache number into r6 */
-				   "orr	r6, r6, r7, lsl r2\n\t" /* factor index number into r6 */
-				   "mcr	p15, 0, r6, c7, c14, 2\n\t" /* invalidate by set/way */
-				   "subs	r9, r9, #1\n\t" /* decrement the way */
-				   "bge	loop3\n\t"
-				   "subs	r7, r7, #1\n\t" /* decrement the index */
-				   "bge	loop2\n\t"
-				   "skip:\n\t"
-				   "add	r10, r10, #2\n\t" /* increment cache number */
-				   "cmp	r3, r10\n\t"
-				   "bgt	loop1\n\t"
-				   "finished:\n\t"
-				   "mov	r10, #0\n\t" /* switch back to cache level 0 */
-				   "mcr	p15, 2, r10, c0, c0, 0\n\t" /* select current cache level in cssr */
-				   "dsb\n\t"
-				   "isb\n\t"
-				   :
-				   :
-				   : "r0", "r1", "r2", "r3", "r4", "r5",
-				   "r6", "r7", "r9", "r10" );
-}
-
 void _init(void)
 {
 extern int main( void );
-#if ( configVM_PRE_SETUP == 0 )
-int i;
 unsigned long *pulSrc, *pulDest;
 volatile unsigned long ulSCTLR = 0UL;
 extern unsigned long __isr_vector_start;
 extern unsigned long __isr_vector_end;
-/*extern unsigned long _etext;
-extern unsigned long _data;*/
-/* extern unsigned long _bss; */
-/* extern unsigned long _ebss; */
-#endif
-#if ( configVM_PRE_SETUP == 1 )
-//xMemoryInformationType *mit = configMIS_SECTION_ADDRESS;
-#endif
-
-#if ( configVM_PRE_SETUP == 0)
-	/* Disabled: The MMU and caches should be off at startup anyway. */
-/*	// Disable MMU
-	unsigned long CSIR;
-	int cachesets,j;
-
-	WriteSCTLR(ReadSCTLR()&~(1<<0));
-
-	// Invalidate instruction cache.
-	vPortInvalidateInstructionCache();
-
-	// Invalidate data cache.
-	__asm volatile("mrc p15, 1, %[csir], c0, c0, 0"
-	:[csir] "=r" (CSIR)::);
-	cachesets=((CSIR>>13)&0x1ff)+1;
-
-	for(j=0;j<4;j++)
-	for(i=0;i<cachesets;i++)
-	{
-		unsigned long line=(j<<30)|(i<<5);
-		__asm volatile ("mcr   p15, 0, %[line], c7, c6, 2"::[line] "r" (line):);
-	}
-
-	// Invalidate TLB.
-	__asm volatile ("mcr   p15, 0, %[zero], c8, c7, 0"::[zero] "r" (0):);
-*/
+extern unsigned long _etext;
+//extern unsigned long _data;
+extern unsigned long _bss;
+extern unsigned long _ebss;
 
 	/* Copy the data segment initializers from flash to SRAM. */
-	/* Disabled: The linker script just uses one copy of the data segment in RAM on the Versatile. */
-/*	pulSrc = &_etext;
-	for(pulDest = &_data; pulDest < &_edata; )
-	{
-		*pulDest++ = *pulSrc++;
-	}*/
+	pulSrc = &_etext;
+	//for(pulDest = &_data; pulDest < &_edata; )
+	//{
+	//	*pulDest++ = *pulSrc++;
+	//}
 
 	/* Zero fill the bss segment. */
 	for(pulDest = &_bss; pulDest < &_ebss; )
 	{
 		*pulDest++ = 0;
 	}
-#endif
 
-	/* Configure the Stack Pointer for the Processor Modes. */
-	__asm volatile (
-			" cps #17							\n"
-			" nop 								\n"
-			" mov SP, %[fiqsp]					\n"
-			" nop 								\n"
-			" cps #18							\n"
-			" nop 								\n"
-			" mov SP, %[irqsp]					\n"
-			" nop 								\n"
-#if configPLATFORM == 1
-			" cps #22							\n"
-			" nop 								\n"
-			" mov SP, %[abtsp]					\n"
-			" nop 								\n"
-#endif /* configPLATFORM */
-			" cps #23							\n"
-			" nop 								\n"
-			" mov SP, %[abtsp]					\n"
-			" nop 								\n"
-			" cps #27							\n"
-			" nop 								\n"
-			" mov SP, %[abtsp]					\n"
-			" nop 								\n"
-			" cps #19							\n"
-			" nop 								\n"
-			" mov SP, %[svcsp]					\n"
+	// Configure the Stack Pointer for the Processor Modes. 
+	 __asm volatile (
+//			" cps #17							\n"
+//			" nop 								\n"
+//			" mov SP, %[fiqsp]					\n"
+//			" nop 								\n"
+//			" cps #18							\n"
+//			" nop 								\n"
+//			" mov SP, %[irqsp]					\n"
+//			" nop 								\n"
+//#if configPLATFORM == 1
+//			" cps #22							\n"
+//			" nop 								\n"
+//			" mov SP, %[abtsp]					\n"
+//			" nop 								\n"
+//#endif // configPLATFORM 
+//			" cps #23							\n"
+//			" nop 								\n"
+//			" mov SP, %[abtsp]					\n"
+//			" nop 								\n"
+//			" cps #27							\n"
+//			" nop 								\n"
+//			" mov SP, %[abtsp]					\n"
+//			" nop 								\n"
+//			" cps #19							\n"
+//			" nop 								\n"
+//			" mov SP, %[svcsp]					\n"
 			" nop 								\n"
 			: : [fiqsp] "r" (puxFIQStackPointer),
 				[irqsp] "r" (puxIRQStackPointer),
 				[abtsp] "r" (puxAbortStackPointer),
 				[svcsp] "r" (puxSVCStackPointer)
-				:  );
+				:  ); 
 
-#if ( configVM_PRE_SETUP == 0 )
 	/* Finally, copy the exception vector table over the boot loader. */
 	pulSrc = (unsigned long *)&__isr_vector_start;
 	pulDest = (unsigned long *)portEXCEPTION_VECTORS_BASE;
@@ -727,69 +582,39 @@ extern unsigned long _data;*/
 
 	/* VBAR is modified to point to the new Vector Table. */
 	pulDest = (unsigned long *)portEXCEPTION_VECTORS_BASE;
-	__asm volatile(
-			" mcr p15, 0, %[vbar], c12, c0, 0 			\n"
-			: : [vbar] "r" (pulDest) :
-			);
+//	__asm volatile(
+//			" mcr p15, 0, %[vbar], c12, c0, 0 			\n"
+//			: : [vbar] "r" (pulDest) :
+//			);
+
+	/* Read Configuration Register C15, c0, 0. */
+//	__asm volatile(
+//			" mrc p15, 0, %[sctlr], c1, c0, 0 			\n"
+//			: [sctlr] "=r" (ulSCTLR) : :
+//			);
 
 	/* Now we modify the SCTLR to change the Vector Table Address. */
-	ulSCTLR=ReadSCTLR();
-	ulSCTLR&=~(1<<13);
-	WriteSCTLR(ulSCTLR);
-#endif
+	ulSCTLR &= ~( 1 << 13 );
+
+	/* Write Configuration Register C15, c0, 0. */
+//	__asm volatile(
+//			" mcr p15, 0, %[sctlr], c1, c0, 0 			\n"
+//			: : [sctlr] "r" (ulSCTLR) :
+//			);
 
 #if configPLATFORM == 1
 	/* Now set-up the Monitor Mode Vector Table. */
 	pulSrc = (unsigned long *)&__isr_vector_start;
 	pulSrc[ 2 ] = (unsigned long)vPortSMCHandler;
-	__asm volatile(
-			" cps #22 									\n"
-			" nop 										\n"
-			" mcr p15, 0, %[vbar], c12, c0, 1 			\n"
-			" mcr p15, 0, %[sctlr], c1, c0, 0 			\n"
-			" cps #19 "
-			: : [vbar] "r" (pulSrc), [sctlr] "r" (ulSCTLR) :
-			);
+//	__asm volatile(
+//			" cps #22 									\n"
+//			" nop 										\n"
+//			" mcr p15, 0, %[vbar], c12, c0, 1 			\n"
+//			" mcr p15, 0, %[sctlr], c1, c0, 0 			\n"
+//			" cps #19 "
+//			: : [vbar] "r" (pulSrc), [sctlr] "r" (ulSCTLR) :
+//			);
 #endif /* configPLATFORM */
-
-#if ( configVM_PRE_SETUP == 0 )
-	// Enable branch prediction.
-	WriteSCTLR(ReadSCTLR()|(1<<11));
-  
-	// Enable D-side prefetch.
-	WriteACTLR(ReadACTLR()|(1<<2));
-
-	// Set up page table.
-	for(i=0;i<64;i++)
-	{
-		PageTable[i]=(i<<20)|0x05de6;
-	}
-
-	for(i=64;i<4096;i++)
-	{
-		PageTable[i]=(i<<20)|0x0de2;
-	}
-
-	// Initialize MMU.
-
-	// Enable TTB0 only.
-	// Set translation table base address.
-	// Set all domains to client.
-	__asm volatile (
-			" mcr	p15, 0, %[ttbcr], c2, c0, 2		\n" // Write Translation Table Base Control Register  LDR   r0, ttb_address
-			" mcr	p15, 0, %[ttbr0], c2, c0, 0	\n" // Write Translation Table Base Register 0
-			" mcr	p15, 0, %[dacr], c3, c0, 0 	\n" // Write Domain Access Control Register
-			: : [ttbcr] "r" (0),
-				[ttbr0] "r" (PageTable),
-				[dacr] "r" (0x55555555)
-				:  );
-
-	// Enable MMU.
-	WriteSCTLR(ReadSCTLR()|(1<<0));
-
-	// Enable L1 I & D caches.
-	WriteSCTLR(ReadSCTLR()|(1<<2)|(1<<12));
-#endif
 
 	main();
 }

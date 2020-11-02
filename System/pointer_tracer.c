@@ -143,7 +143,7 @@ static int pt_internal_struct_iterator_cb(pt_pstate *pstate, Dwarf_Die die, void
 	new_v->type_die  = die;
 	new_v->mem_p	 = (void *)((npi_t)v->mem_p + (npi_t)loc);
 	new_v->section_p = v->section_p;
-	DEBUG_MSG("%s: following variable @ 0x%x\n", __func__, (npi_t)new_v->mem_p);
+	DEBUG_MSG("%s: following variable @ 0x%lx\n", __func__, (npi_t)new_v->mem_p);
 
 	if (!pt_internal_trace_type(pstate, new_v)) {
 		SYSTEM_FREE_CALL(new_v);
@@ -176,7 +176,7 @@ static int pt_internal_trace_type(pt_pstate *state, pt_visited_variable *v)
 
 		switch (tag) {
 		case DW_TAG_pointer_type:
-			DEBUG_MSG("%s: Adding pointer @ 0x%x\n", __func__, (npi_t)v->mem_p);
+			DEBUG_MSG("%s: Adding pointer @ 0x%lx\n", __func__, (npi_t)v->mem_p);
 			return pt_internal_trace_pointer(state, v);
 		case DW_TAG_structure_type:
 			DEBUG_MSG("%s: Iterating through structure.\n", __func__);
@@ -191,7 +191,7 @@ static int pt_internal_trace_type(pt_pstate *state, pt_visited_variable *v)
 			return pt_iterate_die_and_siblings(state, child_die,
 							   pt_internal_struct_iterator_cb, v);
 		case DW_TAG_base_type:
-			DEBUG_MSG("%s: Adding base var @ 0x%x\n", __func__, (npi_t)v->mem_p);
+			DEBUG_MSG("%s: Adding base var @ 0x%lx\n", __func__, (npi_t)v->mem_p);
 			return pt_internal_trace_var(state, v);
 		}
 	} while ((v->type_die = dwarfif_follow_attr(state->dbg, v->type_die, DW_AT_type)) != NULL);
@@ -333,7 +333,7 @@ static int pt_internal_trace_pointer(pt_pstate *state, pt_visited_variable *v)
 	new_v->type_die  = next_type_die;
 	new_v->mem_p	 = (void *)new_p;
 	new_v->section_p = new_section_p;
-	DEBUG_MSG("%s: Following variable @ 0x%x\n", __func__, (npi_t)new_p);
+	DEBUG_MSG("%s: Following variable @ 0x%lx\n", __func__, (npi_t)new_p);
 
 	if (!pt_internal_trace_type(state, new_v)) {
 		SYSTEM_FREE_CALL(new_v);

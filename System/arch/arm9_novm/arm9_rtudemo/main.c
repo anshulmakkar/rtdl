@@ -122,9 +122,9 @@ int main()
 	Elf32_Ehdr *sys_elfh = SYSTEM_ELF;
 
 	if (check_elf_magic(sys_elfh))
-		INFO_MSG("System ELF magic checks out @ 0x%x\n", (u_int32_t)sys_elfh);
+		INFO_MSG("System ELF magic checks out @ 0x%lx\n", (u_int32_t)sys_elfh);
 	else {
-		ERROR_MSG("Wrong System ELF magic @ 0x%x\n", (u_int32_t)sys_elfh);
+		ERROR_MSG("Wrong System ELF magic @ 0x%lx\n", (u_int32_t)sys_elfh);
 		goto exit;
 	}
 

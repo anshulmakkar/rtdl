@@ -33,7 +33,7 @@
 #include <task.h>
 #include <semphr.h>
 
-#include <System/types.h>
+//#include <System/types.h>
 #include <System/linker.h>
 #include <System/migrator.h>
 #include <System/applications.h>
@@ -89,7 +89,7 @@ static int runtime_update_die_cb(pt_pstate *pstate, Dwarf_Die die, void *arg)
 		task_register_cons *trc = pstate->trc;
 		void *p = dwarfif_find_static_var_address(trc, die);
 		u_int32_t address = (u_int32_t)p;
-		DEBUG_MSG("Found variable @ 0x%x, we have lower_bound = 0x%x and upper_bound = 0x%x\n",
+		DEBUG_MSG("Found variable @ 0x%lx, we have lower_bound = 0x%lx and upper_bound = 0x%lx\n",
 			  address, bounds->lower_bound, bounds->upper_bound);
 		if (p != NULL && address >= bounds->lower_bound && address < bounds->upper_bound) {
 			const char *s;
@@ -97,7 +97,7 @@ static int runtime_update_die_cb(pt_pstate *pstate, Dwarf_Die die, void *arg)
 				ERROR_MSG("%s: Could not get tag name.\n", __func__);
 				return 0;
 			}
-			DEBUG_MSG("Found static variable \"%s\" @ 0x%x, with type %s.\n", name, (u_int32_t)p, s);
+			DEBUG_MSG("Found static variable \"%s\" @ 0x%lx, with type %s.\n", name, (u_int32_t)p, s);
 			INFO_MSG("Found type for variable %s\n", name);
 
 			if (!pt_trace_pointer(pstate, type_die, p)) {
@@ -370,8 +370,6 @@ int migrator_runtime_update(task_register_cons *trc, Elf32_Ehdr *new_sw)
 			memcpy((void *)new_p, (void *)old_p, dmsp->tdc_p->size);
 
 			dmsp->delta_p = new_p - old_p;
-			DEBUG_MSG("Copied %u bytes from 0x%x to 0x%x, delta_p = %i\n",
-				  dmsp->tdc_p->size, old_p, new_p, dmsp->delta_p);
 		}
 	}
 
@@ -419,7 +417,7 @@ int migrator_runtime_update(task_register_cons *trc, Elf32_Ehdr *new_sw)
 
 			if (rel_p == NULL) {
 				ERROR_MSG("Could not find address for relocated variable "
-					  "from @ 0x%x", (u_int32_t)vvp->mem_p);
+					  "from @ 0x%lx", (u_int32_t)vvp->mem_p);
 				goto error_L2_rtu0;
 			}
 
@@ -444,7 +442,7 @@ int migrator_runtime_update(task_register_cons *trc, Elf32_Ehdr *new_sw)
 			 * Write out the value.
 			 */
 
-			DEBUG_MSG("Setting variable @ 0x%x to 0x%x\n",
+			DEBUG_MSG("Setting variable @ 0x%lx to 0x%lx\n",
 				  (u_int32_t)rel_p, (u_int32_t)rel_p_val);
 
 			*(u_int32_t *)rel_p = (u_int32_t)rel_p_val;
@@ -527,7 +525,7 @@ int migrator_start()
 		return 0;
 	}
 
-	DEBUG_MSG("migrator_task_handle @ 0x%x\n", (u_int32_t)&migrator_task_handle);
+	DEBUG_MSG("migrator_task_handle @ 0x%lx\n", (u_int32_t)&migrator_task_handle);
 
 	return 1;
 }

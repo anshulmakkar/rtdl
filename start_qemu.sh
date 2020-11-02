@@ -39,7 +39,7 @@ CPU=versatilepb
 
 DEBUG=$2
 
-if [ X$DEBUG == XDEBUG ]; then
+if [ $DEBUG == DEBUG ]; then
     $QEMU -M $CPU -serial stdio -s -S -kernel $1
 else
     $QEMU -M $CPU -serial stdio -kernel $1

@@ -33,12 +33,13 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <System/types.h>
+//#include <System/types.h>
 #include <System/linker.h>
 #include <System/system.h>
 
 int check_elf_magic(Elf32_Ehdr *hdr)
 {
+	DEBUG_MSG("check_elf_magic \n");
 	if (hdr->e_ident[0] != ELFMAG0)
 		return 0;
 
@@ -106,7 +107,7 @@ Elf32_Sym *find_symbol(char *name, Elf32_Ehdr *elf_h)
 	Elf32_Shdr *symtab_sect = find_section(".symtab", elf_h);
 	Elf32_Shdr *strtab_sect = find_section(".strtab", elf_h);
 
-	DEBUG_MSG("Searching for symbol %s in elf @ 0x%x\n", name, (npi_t)elf_h);
+	DEBUG_MSG("Searching for symbol %s in elf @ 0x%lx\n", name, (npi_t)elf_h);
 
 	if (symtab_sect == NULL) {
 		ERROR_MSG("Found no .symtab section\n");
@@ -126,7 +127,7 @@ Elf32_Sym *find_symbol(char *name, Elf32_Ehdr *elf_h)
 	Elf32_Sym *syms = (Elf32_Sym *)((u_int32_t)elf_h + symtab_sect->sh_offset);
 
 	u_int32_t n = symtab_sect->sh_size / symtab_sect->sh_entsize;
-	INFO_MSG("Found %i entries in .symtab (sect at address 0x%x)\n", n, (unsigned int)syms);
+	INFO_MSG("Found %li entries in .symtab (sect at address 0x%x)\n", n, (unsigned int)syms);
 
 	for (i = 0; i < n; i++) {
 		tname = get_shstr(elf_h, strtab_sect, syms[i].st_name);
@@ -241,7 +242,7 @@ int link_relocations(task_register_cons *app_trc, Elf32_Ehdr *sys_elfh, task_reg
 			case R_ARM_GLOB_DAT:
 				break;
 			default:
-				ERROR_MSG("Found non supported relocation type (%i)\n", ELF32_R_TYPE(r[j].r_info));
+				ERROR_MSG("Found non supported relocation type (%lx)\n", ELF32_R_TYPE(r[j].r_info));
 				return 0;
 
 			}
@@ -307,7 +308,7 @@ int link_relocations(task_register_cons *app_trc, Elf32_Ehdr *sys_elfh, task_reg
 				u_int32_t *rel_address = (u_int32_t *)((u_int32_t)app_trc->cont_mem + r[j].r_offset);
 				*rel_address = (u_int32_t)address;
 
-				INFO_MSG("R_ARM_JUMP_SLOT: The relocation address is set to 0x%x\n", address);
+				INFO_MSG("R_ARM_JUMP_SLOT: The relocation address is set to 0x%lx\n", address);
 			}
 			break;
 			case R_ARM_GLOB_DAT:
@@ -318,7 +319,7 @@ int link_relocations(task_register_cons *app_trc, Elf32_Ehdr *sys_elfh, task_reg
 				*rel_address = (u_int32_t)address;
 				//*(u_int32_t *)address = (u_int32_t)rel_address;
 
-				INFO_MSG("R_ARM_GLOB_DAT: The relocation address is set to 0x%x\n", address);
+				INFO_MSG("R_ARM_GLOB_DAT: The relocation address is set to 0x%lx\n", address);
 			}
 			break;
 			default:

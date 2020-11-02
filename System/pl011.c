@@ -73,6 +73,10 @@
 #define UART1_BASE			( 0x1000A000UL )		/* Realview PBX Cortex-A9, Versatile Express. */
 #define UART2_BASE			( 0x1000B000UL )		/* Versatile Express. */
 #define UART3_BASE			( 0x1000C000UL )		/* Versatile Express. */
+//#define UART0_BASE			( 0x1c090000UL )		/* Realview PBX Cortex-A9, Versatile Express. */
+//#define UART1_BASE			( 0x1c0a0000UL )		/* Realview PBX Cortex-A9, Versatile Express. */
+//#define UART2_BASE			( 0x1c0b0000UL )		/* Versatile Express. */
+//#define UART3_BASE			( 0x1c0c0000UL )		/* Versatile Express. */
 #define UART_DEVICE_TYPE	0
 
 #define UARTDR(x)			( (volatile unsigned char *)	( (x) + 0x0000UL ) )	/* Data Register */

@@ -44,7 +44,7 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
-#include <sys/types.h>
+//#include <sys/types.h>
 #include <stdlib.h>
 
 /* Array to hold string representation of errors. Any time a 

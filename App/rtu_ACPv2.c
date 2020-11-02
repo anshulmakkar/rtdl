@@ -228,7 +228,7 @@ int main()
 
 	  /*Print out on display*/
 	  printf("#--------------Display v2.0-------------#\n");
-	  printf("| External temperature:         %d  ",ext_temp);
+	  printf("| External temperature:         %ld  ",ext_temp);
 	  print_space((int)(ext_temp)); printf("C |\n");
 	  printf("|                               %d  ",(int)((ext_temp)*(9.0/5.0)+32.0));
 	  print_space((int)((ext_temp)*(9.0/5.0)+32.0)); printf("F |\n");

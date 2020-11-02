@@ -34,7 +34,7 @@
 #include <System/dwarfif.h>
 #include <System/system.h>
 
-#include <libdwarf.h>
+#include "libdwarf.h"
 
 /*
  * A dynamic memory section that is included in the pointer graph.

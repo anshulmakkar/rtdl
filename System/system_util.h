@@ -28,8 +28,9 @@
 #ifndef SYSTEM_UTIL_H
 #define SYSTEM_UTIL_H
 
-#include <System/types.h>
-
+#include <sys/types.h>
+#include <stddef.h>
+//#include <types.h>
 int util_pointer_in_section(void *sp, size_t ss, void *p);
 
 #endif /* SYSTEM_UTIL_H */

@@ -30,9 +30,6 @@ ENTRY(Kernel_Start);
 MEMORY
 {
 	ram (rwx) : ORIGIN = 0x00000, LENGTH = ( 64M )
-	//flash (rx) : ORIGIN = 0x10000, LENGTH = ( 64M - 0x10000 )
-	//ram (rwx) : ORIGIN = 0x4001000, LENGTH = ( 128M - 0x1000 )
-	//sdram (rwx) : ORIGIN = 0x20000000, LENGTH = 512M
 }
 
 PROVIDE(__stack_offset = 0x00000);

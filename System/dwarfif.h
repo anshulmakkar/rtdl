@@ -30,7 +30,7 @@
 
 #include <System/task_manager.h>
 
-#include <libdwarf.h>
+#include "libdwarf.h"
 
 int		 dwarfif_get_access_if(task_register_cons *trc, Dwarf_Obj_Access_Interface *aif);
 int		 dwarfif_init(task_register_cons *trc, Dwarf_Debug *dbg);

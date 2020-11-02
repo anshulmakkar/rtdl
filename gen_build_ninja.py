@@ -847,7 +847,7 @@ gen_step_build("rtupid", config_source_files['rtupid'],
 
 c = configs[1]
 
-debug_in_kernel = False
+debug_in_kernel = False 
 
 def gen_kernel_boot_build(name, c):
     n.build(outputs   = bindir + "kernel-" + name + ".elf",

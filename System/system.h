@@ -40,6 +40,7 @@
 #define XMACRO_STR(MACRO) MACRO_STR(MACRO)
 #define MACRO_STR(MACRO) #MACRO
 
+#define DEBUG
 #ifdef DEBUG
 #ifdef SYSTEM_MODULE
 #define DEBUG_MSG(...)	printf(XMACRO_STR(SYSTEM_MODULE) ": DEBUG>>> "  __VA_ARGS__)
@@ -50,6 +51,7 @@
 #define DEBUG_MSG(...)
 #endif
 
+#define INFO
 #ifdef INFO
 #ifdef SYSTEM_MODULE
 #define INFO_MSG(...)	printf(XMACRO_STR(SYSTEM_MODULE) ": INFO >>> " __VA_ARGS__)

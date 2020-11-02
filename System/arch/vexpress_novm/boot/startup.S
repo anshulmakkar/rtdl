@@ -59,7 +59,7 @@ FIQ_Addr:        .word     FIQ_Handler
 
 Reset_Handler:
 	LDR			SP, Stack_Addr
-	B			_init
+	B			_init //anshul branch to init in port.c
 Stack_Addr:		.word	  __stack
 
 Undefined_Handler:

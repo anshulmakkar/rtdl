@@ -7,8 +7,8 @@
 #ifndef UMM_MALLOC_H
 #define UMM_MALLOC_H
 
-#include <umm_config.h>
-
+#define UMM_CONFIGURABLE_HEAP 1
+#define UMM_BLOCK_SIZE (64)
 // ----------------------------------------------------------------------------
 // A couple of macros to make packing structures less compiler dependent
 

@@ -30,7 +30,8 @@
 #define DWARFIF DWARFIF
 #define SYSTEM_MODULE DWARFIF
 
-#include <System/types.h>
+//#include <System/types.h>
+#include <sys/types.h>
 #include <System/dwarfif.h>
 #include <System/task_manager.h>
 #include <System/system.h>

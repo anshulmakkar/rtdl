@@ -67,7 +67,7 @@ static void print_data_row(int32_t input, int32_t output)
 	int i;
 	char ostr[40];
 
-	sprintf(ostr, "%i, %i;\n", input, output);
+	sprintf(ostr, "%li, %li;\n", input, output);
 
 	for (i = 0; ostr[i] != '\0'; i++) {
 		xUARTSendCharacter(3, ostr[i], 0);

@@ -77,14 +77,14 @@
 #endif
 
 #ifndef HAVE___UINT32_T
-typedef int __int32_t;
-typedef unsigned __uint32_t;
+//typedef int __int32_t;
+//typedef unsigned __uint32_t;
 #define HAVE___UINT32_T 1
 #endif
 
 #ifndef HAVE___UINT64_T
-typedef long long __int64_t;
-typedef unsigned long long __uint64_t;
+//typedef long long __int64_t;
+//typedef unsigned long long __uint64_t;
 #define HAVE___UINT64_T 1
 #endif
 

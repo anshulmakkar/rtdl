@@ -93,7 +93,7 @@ static void print_data_row(int32_t fps, int32_t cs)
 	int i;
 	char ostr[40];
 
-	sprintf(ostr, "%i, %i;\n", fps, cs);
+	sprintf(ostr, "%li, %li;\n", fps, cs);
 
 	for (i = 0; ostr[i] != '\0'; i++) {
 		xUARTSendCharacter(3, ostr[i], 0);
@@ -159,7 +159,7 @@ static int setup_queues( void )
 		return 0;
 	}
 
-	DEBUG_MSG("Control signal @ 0x%x\n", (npi_t)&ControlSignalQueue);
+	DEBUG_MSG("Control signal @ 0x%lx\n", (npi_t)&ControlSignalQueue);
 
 	return 1;
 }
@@ -170,9 +170,9 @@ static int start_dl_tasks( void )
 	Elf32_Ehdr	*sys_elfh     = SYSTEM_ELF;
 
 	if (check_elf_magic(sys_elfh))
-		INFO_MSG("System ELF magic checks out @ 0x%x\n", (u_int32_t)sys_elfh);
+		INFO_MSG("System ELF magic checks out @ 0x%lx\n", (u_int32_t)sys_elfh);
 	else {
-		ERROR_MSG("Wrong System ELF magic @ 0x%x\n", (u_int32_t)sys_elfh);	
+		ERROR_MSG("Wrong System ELF magic @ 0x%lx\n", (u_int32_t)sys_elfh);	
 		return 0;
 	}
 

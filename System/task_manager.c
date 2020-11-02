@@ -124,7 +124,7 @@ request_hook_fn_t task_find_request_hook(task_register_cons *trc)
 	Elf32_Sym *request_hook_symbol = find_symbol("cpRequestHook", trc->elfh);
 	if (request_hook_symbol) {
 		ret = (request_hook_fn_t)((u_int32_t)trc->cont_mem + (u_int32_t)request_hook_symbol->st_value);
-		INFO_MSG("Found request hook symbol in task \"%s\" @ 0x%x\n", trc->name, (u_int32_t)ret);
+		INFO_MSG("Found request hook symbol in task \"%s\" @ 0x%lx\n", trc->name, (u_int32_t)ret);
 	}
 
 	return ret;
@@ -150,7 +150,7 @@ int task_link(task_register_cons *trc)
 	 * The system elf could esstially come from anywhere so we
 	 * will check the magic each time.
 	 */
-	DEBUG_MSG("System elf @ 0x%x\n", (npi_t)sys_elfh);
+	DEBUG_MSG("System elf @ 0x%lx\n", (npi_t)sys_elfh);
 	if (!check_elf_magic(sys_elfh)) {
 		ERROR_MSG("System elf magic does not check out.\n");
 		return 0;
@@ -183,7 +183,7 @@ int task_alloc(task_register_cons *trc)
 			alloc_size = alloc_size > s_req ? alloc_size : s_req;
 		}
 	}
-	DEBUG_MSG("memory required for task \"%s\": %u\n", trc->name, alloc_size);
+	DEBUG_MSG("memory required for task \"%s\": %lu\n", trc->name, alloc_size);
 
 	/*
 	 * 2. Allocate continous memory region and create section
@@ -257,8 +257,8 @@ int task_alloc(task_register_cons *trc)
 	trc->request_hook = task_find_request_hook(trc);
 
 #ifdef DATA_CACHE_ENABLED
-	vPortCleanDataCache();
-	vPortInvalidateInstructionCache();
+	//vPortCleanDataCache();
+	//vPortInvalidateInstructionCache();
 #endif /* DATA_CACHE_ENABLED */
 
 	return 1;
@@ -331,7 +331,7 @@ int task_start(task_register_cons *trc)
 	 */
 
 	if ((u_int32_t)entry_sym & 0x3) {
-		ERROR_MSG("the entry point (@ 0x%x) is not 4 byte aligned.\n", (u_int32_t)entry_sym);
+		ERROR_MSG("the entry point (@ 0x%lx) is not 4 byte aligned.\n", (u_int32_t)entry_sym);
 		return 0;
 	}
 
@@ -345,7 +345,7 @@ int task_start(task_register_cons *trc)
 	 * Create FreeRTOS task.
 	 */
 
-	DEBUG_MSG("Entry point for task \"%s\" = 0x%x\n", trc->name, (u_int32_t)entry_point);
+	DEBUG_MSG("Entry point for task \"%s\" = 0x%lx\n", trc->name, (u_int32_t)entry_point);
 
 	if (xTaskCreate((pdTASK_CODE)entry_point, (const signed char *)trc->name,
 			configMINIMAL_STACK_SIZE, NULL,
@@ -390,7 +390,7 @@ task_register_cons *task_register(const char *name, Elf32_Ehdr *elfh)
 	LIST_INIT(&trc->sections);
 	SPLAY_INIT(&trc->dynmemsects);
 
-	DEBUG_MSG("Number of tasks registered: %i\n", get_number_of_tasks());
+	//DEBUG_MSG("Number of tasks registered: %i\n", get_number_of_tasks());
 
 	return trc;
 }
